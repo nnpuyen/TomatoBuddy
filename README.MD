@@ -24,6 +24,10 @@ cd TomatoBuddy
 ```sh
 cd your-repo/TomatoBuddy
 ```
+4. Opne the .env file and paste your own MongoDB URI
+```sh
+MONGODB_URI = "PASTE THE URI HERE"
+```
 3. Install all dependencies
 ```sh
 pip install -r requirements.txt
