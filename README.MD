@@ -18,7 +18,6 @@ A smart AIoT solution for monitoring and managing tomato plant growth.
 ```sh
 git clone https://github.com/22127446/TomatoBuddy.git
 cd TomatoBuddy
-# Follow setup instructions in the docs
 ```
 2. Navigate to the TomatoBuddy folder
 ```sh
