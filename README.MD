@@ -10,13 +10,13 @@ A smart AIoT solution for monitoring and managing tomato plant growth.
 - Plant care suggestion
 - Web dashboard
 
-## START THE SIMULATION OF THE PHYSICAL LAYER
+## Start the simulation of the physical layer
 - Go to https://wokwi.com/projects/432902105702275073 and start the simulation
 
-## INSTALLATION, SETUP AND RUN INSTRUCTION
+## Installation, setup and run instruction
 1. Clone the project from github
 ```sh
-git clone https://github.com/yourusername/TomatoBuddy.git
+git clone https://github.com/22127446/TomatoBuddy.git
 cd TomatoBuddy
 # Follow setup instructions in the docs
 ```
