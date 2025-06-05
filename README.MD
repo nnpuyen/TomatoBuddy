@@ -28,7 +28,7 @@ cd your-repo/TomatoBuddy
 ```sh
 pip install -r requirements.txt
 ```
-4. Run 
+4. Run the FAST API server
 ```sh
 uvicorn app.main:app --reload
 ```
