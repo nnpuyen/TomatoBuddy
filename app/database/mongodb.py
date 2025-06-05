@@ -5,7 +5,6 @@ import os
 load_dotenv()
 uri = os.getenv("MONGODB_URI")
 database_name = os.getenv("DATABASE_NAME")
-print(uri)
 client = MongoClient(uri)
 db = client[database_name] #database_name là TomatoBuddy
 
