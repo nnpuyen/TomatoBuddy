@@ -1,14 +1,23 @@
 from fastapi import FastAPI
-from app.mqtt_client import start_mqtt, publish_message
+from app.mqtt_client import start_mqtt
+from app.routers import commands, data
 
 # The FastAPI app is now created with a lifespan handler below
-
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("🚀 FastAPI is starting...")
+    print("FastAPI is starting...")
     start_mqtt()
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+# Include routers
+app.include_router(commands.router)
+app.include_router(data.router)
+
+
+@app.get("/")
+async def root():
+    return {"message": "TomatoBuddy API is running"}
