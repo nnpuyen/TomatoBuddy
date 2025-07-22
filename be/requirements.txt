@@ -3,4 +3,6 @@ paho-mqtt==2.1.0
 pymongo==4.13.0
 python-dotenv==1.1.0
 uvicorn==0.34.0
+cloudinary==1.36.0
+
 
