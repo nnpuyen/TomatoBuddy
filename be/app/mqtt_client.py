@@ -71,14 +71,33 @@ def handle_inference_data(data):
         image_id = data.get("image_id","")
         prediction = data.get("prediction", "")
         confidence = float(data.get("confidence", 0.0))
+        image_data = data.get("image_data", "") # Base64 encoded image
 
         print(f"Inference result: {prediction} ({confidence:.2f}) for image {image_id}")
 
         # TODO: Save inference data to MongoDB
-        # This will be implemented in the next task
+        if image_data:
+            # Decode base64 image
+            import base64
+            from app.database.cloudinary import upload_image
 
-    except Exception as e:
-        print(f"Error handling inference data: {str(e)}")
+            try:
+                image_binary = base64.b64decode(image_data)
+                success, message, image_url = upload_image(
+                    image_binary, 
+                    prediction, 
+                    confidence
+                )
+                if not success:
+                    print(f"Failed to upload image: {message}")
+            except Exception as e:
+                print(f"Error processing image data: {str(e)}")
+        else:
+            print("No image data provided in inference result")
+
+    except Exception as e: # Save inference data to MongoDB without image
+        from app.database.mongodb import save_image_data
+        save_image_data(image_id, prediction, confidence)
 
 
 def handle_command_ack(command_type, data):
