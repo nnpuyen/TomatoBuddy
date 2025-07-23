@@ -5,7 +5,6 @@ import os
 import uuid
 from datetime import datetime
 from dotenv import load_dotenv
-from app.database.mongodb import save_image_data
 
 load_dotenv()
 
@@ -39,8 +38,10 @@ def upload_image(image_binary, prediction="unknown", confidence=0.0):
         image_url = result["secure_url"]
 
         # Save image data to MongoDB
+        from app.database.mongodb import save_image_data
         image_id = f"img_{timestamp}_{unique_id}"
         save_image_data(image_id, prediction, confidence, image_url)
+        
 
         print(f"Image uploaded to Cloudinary: {image_url}")
         return True, "Image uploaded successfully", image_url

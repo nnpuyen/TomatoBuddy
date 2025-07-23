@@ -119,8 +119,18 @@ client.on_message = on_message
 
 # Start mqtt client
 def start_mqtt():
-    client.connect(BROKER, PORT, 60)
-    client.loop_start()
+    """Start MQTT client with error handling"""
+    try:
+        print("Connecting to MQTT broker...")
+        client.connect(BROKER, PORT, 60)
+        client.loop_start()
+        print("MQTT client started successfully")
+        return True
+    except Exception as e:
+        print(f"Warning: Failed to connect to MQTT broker: {str(e)}")
+        print("API will run without MQTT functionality")
+        return False
+
 
 
 def publish_message(topic: str, payload: str):
