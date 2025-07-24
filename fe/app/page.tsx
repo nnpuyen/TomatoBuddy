@@ -1,5 +1,5 @@
-import { Dashboard } from "@/components/dashboard"
+import TomatoBuddyApp from "@/components/tomato-buddy-app"
 
 export default function Home() {
-  return <Dashboard />
+  return <TomatoBuddyApp />
 }
