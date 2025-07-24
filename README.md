@@ -29,7 +29,7 @@ A smart AIoT solution for monitoring and managing tomato plant growth.
 git clone https://github.com/22127446/TomatoBuddy.git
 cd TomatoBuddy
 ```
-2. Opne the .env file and paste your own MongoDB URI
+2. Open the .env file and paste your own MongoDB URI
 ```sh
 MONGODB_URI = "PASTE THE URI HERE"
 ```
