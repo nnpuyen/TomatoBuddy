@@ -1,55 +1,51 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { LayoutGrid, Camera, Droplets, Settings, Bell } from "lucide-react"
+import { Bell, Grid3X3, ImageIcon, FileText, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 
-export function Header() {
-  const pathname = usePathname()
+interface HeaderProps {
+  activeTab: string
+  setActiveTab: (tab: string) => void
+}
 
-  const navItems = [
-    { href: "/", label: "DASHBOARD", icon: LayoutGrid },
-    { href: "/disease-detection", label: "IMAGES AND DISEASE DETECTION", icon: Camera },
-    { href: "/watering-history", label: "WATERING HISTORY", icon: Droplets },
-    { href: "/settings", label: "SETTING", icon: Settings },
+export default function Header({ activeTab, setActiveTab }: HeaderProps) {
+  const tabs = [
+    { id: "dashboard", label: "DASHBOARD", icon: Grid3X3 },
+    { id: "images", label: "IMAGES AND DISEASE DETECTION", icon: ImageIcon },
+    { id: "watering", label: "WATERING HISTORY", icon: FileText },
+    { id: "settings", label: "SETTING", icon: Settings },
   ]
 
   return (
-    <header className="bg-pink-400 text-white px-6 py-4">
+    <header className="bg-pink-500 text-white px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-8">
-          <h1 className="text-xl font-bold">TomatoBuddy</h1>
+          <h1 className="text-xl font-semibold">TomatoBuddy</h1>
           <nav className="flex space-x-6">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
+            {tabs.map((tab) => {
+              const Icon = tab.icon
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded transition-colors ${
-                    isActive ? "bg-white/20 text-white" : "text-white/80 hover:text-white hover:bg-white/10"
+                    activeTab === tab.id ? "bg-white/20 text-white" : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </Link>
+                  <span className="text-sm font-medium">{tab.label}</span>
+                </button>
               )
             })}
           </nav>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="text-right text-sm">
-            <div className="text-white/80">Wednesday, October 18 2021</div>
-            <div className="text-white/80">14:15</div>
-          </div>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+          <span className="text-sm text-white/80">Wednesday, October 18 2021 14:15</span>
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
             <Bell className="w-5 h-5" />
-            <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               1
-            </Badge>
+            </span>
           </Button>
         </div>
       </div>
