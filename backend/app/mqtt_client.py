@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 from datetime import datetime
 import base64
+import time
 
 from app.database.mongodb import (
     save_sensor_reading,
@@ -11,7 +12,7 @@ from app.database.mongodb import (
 from app.database.cloudinary import upload_image
 
 # MQTT config
-BROKER = "broker.hivemq.com"
+BROKER = "test.mosquitto.org"
 PORT = 1883
 
 # Topics
@@ -113,19 +114,26 @@ def handle_command_ack(command_type: str, data: dict):
 
 # -------------------- MQTT UTILITIES --------------------
 
-def start_mqtt() -> bool:
-    """Connect and start MQTT loop in background"""
-    try:
-        print("Connecting to MQTT broker...")
-        client.on_connect = on_connect
-        client.on_message = on_message
-        client.connect(BROKER, PORT, keepalive=60)
-        client.loop_start()
-        print("MQTT client started")
-        return True
-    except Exception as e:
-        print(f"MQTT connection failed: {str(e)}")
-        return False
+def start_mqtt(max_retries: int = 9999, retry_delay: int = 5) -> bool:
+    """Connect and start MQTT loop in background, with retry if fails"""
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"[MQTT] Attempt {attempt}: Connecting to broker {BROKER}:{PORT} ...")
+            client.connect(BROKER, PORT, keepalive=60)
+            client.loop_start()
+            print("[MQTT] MQTT client started")
+            return True
+        except Exception as e:
+            print(f"[MQTT] Connection failed: {e}")
+            if attempt < max_retries:
+                print(f"[MQTT] Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print("[MQTT] Max retries reached. MQTT connection failed")
+                return False
 
 
 def publish_message(topic: str, payload: dict) -> bool:
