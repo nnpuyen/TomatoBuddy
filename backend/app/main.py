@@ -1,23 +1,33 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+import logging
+import os
+
 from app.mqtt_client import start_mqtt
 from app.routers import commands, data
 from app.database import init_database
-from fastapi.middleware.cors import CORSMiddleware
 
-# The FastAPI app is now created with a lifespan handler below
-from contextlib import asynccontextmanager
+# Setup logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Get allowed origins from env (default to '*')
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("FastAPI is starting...")
+    logger.info("FastAPI is starting...")
     init_database()
-    # Try to start MQTT client, but continue even if it fails
+
     try:
         start_mqtt()
+        logger.info("MQTT connection established.")
     except Exception as e:
-        print(f"Warning: MQTT connection failed: {str(e)}")
-        print("Running without MQTT functionality")
+        logger.warning(f"MQTT connection failed: {e}")
+        logger.info("Running without MQTT functionality")
+
     yield
 
 
@@ -28,17 +38,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Add CORS middleware to allow frontend requests
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# Include routers
+# Register routers
 app.include_router(commands.router)
 app.include_router(data.router)
 
