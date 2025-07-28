@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # The FastAPI app is now created with a lifespan handler below
 from contextlib import asynccontextmanager
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("FastAPI is starting...")
@@ -19,11 +20,12 @@ async def lifespan(app: FastAPI):
         print("Running without MQTT functionality")
     yield
 
+
 app = FastAPI(
     title="TomatoBuddy API",
     description="API for TomatoBuddy IoT plant monitoring system",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware to allow frontend requests
@@ -46,5 +48,5 @@ async def root():
     return {
         "message": "TomatoBuddy API is running",
         "docs_url": "/docs",
-        "redoc_url": "/redoc"
+        "redoc_url": "/redoc",
     }

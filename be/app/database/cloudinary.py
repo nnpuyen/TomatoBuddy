@@ -12,12 +12,10 @@ cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
 api_key = os.getenv("CLOUDINARY_API_KEY")
 api_secret = os.getenv("CLOUDINARY_API_SECRET")
 
+
 def init_cloudinary():
-    cloudinary.config(
-        cloud_name=cloud_name,
-        api_key=api_key,
-        api_secret=api_secret
-    )
+    cloudinary.config(cloud_name=cloud_name, api_key=api_key, api_secret=api_secret)
+
 
 def upload_image(image_binary, prediction="unknown", confidence=0.0):
     try:
@@ -39,13 +37,12 @@ def upload_image(image_binary, prediction="unknown", confidence=0.0):
 
         # Save image data to MongoDB
         from app.database.mongodb import save_image_data
+
         image_id = f"img_{timestamp}_{unique_id}"
         save_image_data(image_id, prediction, confidence, image_url)
-        
 
         print(f"Image uploaded to Cloudinary: {image_url}")
         return True, "Image uploaded successfully", image_url
-        
 
     except Exception as e:
         print(f"Error uploading image: {str(e)}")
