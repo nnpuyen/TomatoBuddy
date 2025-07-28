@@ -16,6 +16,7 @@ COMMAND_TOPIC = "pizero2w/commands"
 
 client = mqtt.Client()
 
+
 # Connect to MQTT broker
 def on_connect(client, userdata, flags, rc):
     print("Connected to MQTT broker with result code ", rc)
@@ -52,7 +53,9 @@ def handle_sensor_data(data):
         light = float(data.get("light", 0.0))
         water_level = float(data.get("water_level", 0.0))
 
-        print(f"Temp: {temp} °C | Humidity: {humidity} % | Moisture: {moisture} % | Light: {light} | Water: {water_level}ml")
+        print(
+            f"Temp: {temp} °C | Humidity: {humidity} % | Moisture: {moisture} % | Light: {light} | Water: {water_level}ml"
+        )
 
         save_sensor_reading(
             temp=temp,
@@ -60,7 +63,7 @@ def handle_sensor_data(data):
             moisture=moisture,
             light=light,
             water_level=water_level,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
     except Exception as e:
         print(f"Error handling sensor data: {str(e)}")
@@ -68,10 +71,10 @@ def handle_sensor_data(data):
 
 def handle_inference_data(data):
     try:
-        image_id = data.get("image_id","")
+        image_id = data.get("image_id", "")
         prediction = data.get("prediction", "")
         confidence = float(data.get("confidence", 0.0))
-        image_data = data.get("image_data", "") # Base64 encoded image
+        image_data = data.get("image_data", "")  # Base64 encoded image
 
         print(f"Inference result: {prediction} ({confidence:.2f}) for image {image_id}")
 
@@ -84,9 +87,7 @@ def handle_inference_data(data):
             try:
                 image_binary = base64.b64decode(image_data)
                 success, message, image_url = upload_image(
-                    image_binary, 
-                    prediction, 
-                    confidence
+                    image_binary, prediction, confidence
                 )
                 if not success:
                     print(f"Failed to upload image: {message}")
@@ -95,8 +96,9 @@ def handle_inference_data(data):
         else:
             print("No image data provided in inference result")
 
-    except Exception as e: # Save inference data to MongoDB without image
+    except Exception as e:  # Save inference data to MongoDB without image
         from app.database.mongodb import save_image_data
+
         save_image_data(image_id, prediction, confidence)
 
 
@@ -106,16 +108,16 @@ def handle_command_ack(command_type, data):
     print(f"Command {command_type} execution {status}")
 
     save_command_execution(
-        command_type=command_type,
-        success=success,
-        timestamp=datetime.now()
+        command_type=command_type, success=success, timestamp=datetime.now()
     )
+
 
 # Set on_connect function
 client.on_connect = on_connect
 
-# Set on_message function 
+# Set on_message function
 client.on_message = on_message
+
 
 # Start mqtt client
 def start_mqtt():
@@ -132,37 +134,34 @@ def start_mqtt():
         return False
 
 
-
 def publish_message(topic: str, payload: str):
     result = client.publish(topic, payload)
     return result.rc == mqtt.MQTT_ERR_SUCCESS
+
 
 # Command functions for controlling the device
 def send_water_command(amount: int = 300) -> bool:
     command = {
         "command": "water",
-        "params":{
-            "amount": amount
-        },
-        "timestamp": datetime.now().isoformat()
+        "params": {"amount": amount},
+        "timestamp": datetime.now().isoformat(),
     }
     return publish_message(COMMAND_TOPIC, json.dumps(command))
+
 
 def send_capture_command() -> bool:
     command = {
         "command": "capture",
         "params": {},
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
     return publish_message(COMMAND_TOPIC, json.dumps(command))
+
 
 def send_chirp_command(duration: int = 3) -> bool:
     command = {
         "command": "chirp",
-        "params": {
-            "duration": duration
-        },
-        "timestamp": datetime.now().isoformat()
+        "params": {"duration": duration},
+        "timestamp": datetime.now().isoformat(),
     }
     return publish_message(COMMAND_TOPIC, json.dumps(command))
-
