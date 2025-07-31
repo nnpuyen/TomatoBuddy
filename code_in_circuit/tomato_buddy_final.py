@@ -31,6 +31,7 @@ client = mqtt.Client()
 # ========== GLOBAL FLAG ==========
 capture_requested = False
 
+
 def on_message(client, userdata, msg):
     global capture_requested
     try:
@@ -40,6 +41,7 @@ def on_message(client, userdata, msg):
             capture_requested = True
     except Exception as e:
         print(f"[ERROR] Invalid MQTT message: {e}")
+
 
 client.on_message = on_message
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
@@ -62,22 +64,34 @@ interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
-interpreter_cls = tflite.Interpreter(model_path="model/Mobilenetv2/mobilenetv2_float32.tflite")
+interpreter_cls = tflite.Interpreter(
+    model_path="model/Mobilenetv2/mobilenetv2_float32.tflite"
+)
 interpreter_cls.allocate_tensors()
 input_cls = interpreter_cls.get_input_details()
 output_cls = interpreter_cls.get_output_details()
 
 labels = [
-    "Bacterial Spot", "Early Blight", "Healthy", "Late Blight",
-    "Leaf Mold", "Mosaic Virus", "Septoria Leaf Spot", "Target Spot",
-    "Two-spotted Spider Mites", "Yellow Leaf Curl Virus"
+    "Bacterial Spot",
+    "Early Blight",
+    "Healthy",
+    "Late Blight",
+    "Leaf Mold",
+    "Mosaic Virus",
+    "Septoria Leaf Spot",
+    "Target Spot",
+    "Two-spotted Spider Mites",
+    "Yellow Leaf Curl Virus",
 ]
 
 # ========== MCP3008 setup ==========
-spi = busio.SPI(clock=soil.SOIL_SPI_CLK, MISO=soil.SOIL_SPI_MISO, MOSI=soil.SOIL_SPI_MOSI)
+spi = busio.SPI(
+    clock=soil.SOIL_SPI_CLK, MISO=soil.SOIL_SPI_MISO, MOSI=soil.SOIL_SPI_MOSI
+)
 cs = digitalio.DigitalInOut(soil.SOIL_SPI_CS)
 mcp = MCP.MCP3008(spi, cs)
 soil_channel = AnalogIn(mcp, soil.SOIL_SENSOR_CHANNEL)
+
 
 # ========== Hàm NMS ==========
 def non_max_suppression(boxes, iou_threshold=0.5):
@@ -92,6 +106,7 @@ def non_max_suppression(boxes, iou_threshold=0.5):
         ious = compute_iou(chosen_box, other_boxes)
         boxes = other_boxes[ious < iou_threshold]
     return np.array(selected_boxes)
+
 
 def compute_iou(box, boxes):
     cx1, cy1, w1, h1 = box[:4]
@@ -113,6 +128,7 @@ def compute_iou(box, boxes):
     area2 = (x2_2 - x1_2) * (y2_2 - y1_2)
     return inter_area / (area1 + area2 - inter_area + 1e-6)
 
+
 # ========== Hàm chạy detection và publish ==========
 def run_detection(frame):
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -120,9 +136,9 @@ def run_detection(frame):
     img_array = np.array(image, dtype=np.float32) / 255.0
     input_data = np.expand_dims(img_array, axis=0)
 
-    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.set_tensor(input_details[0]["index"], input_data)
     interpreter.invoke()
-    output = interpreter.get_tensor(output_details[0]['index'])
+    output = interpreter.get_tensor(output_details[0]["index"])
 
     confidences = output[0][4]
     mask = confidences > 0.5
@@ -140,14 +156,16 @@ def run_detection(frame):
 
         if x_max - x_min > 0 and y_max - y_min > 0:
             cropped = image.crop((x_min, y_min, x_max, y_max))
-            cropped_resized = ImageOps.fit(cropped, (96, 96), method=Image.Resampling.LANCZOS)
-            
+            cropped_resized = ImageOps.fit(
+                cropped, (96, 96), method=Image.Resampling.LANCZOS
+            )
+
             input_crop = np.array(cropped_resized, dtype=np.float32) / 255.0
             input_crop = np.expand_dims(input_crop, axis=0)
 
-            interpreter_cls.set_tensor(input_cls[0]['index'], input_crop)
+            interpreter_cls.set_tensor(input_cls[0]["index"], input_crop)
             interpreter_cls.invoke()
-            output_data = interpreter_cls.get_tensor(output_cls[0]['index'])
+            output_data = interpreter_cls.get_tensor(output_cls[0]["index"])
             predicted_class = int(np.argmax(output_data))
             confidence = float(output_data[0][predicted_class])
 
@@ -160,10 +178,13 @@ def run_detection(frame):
                 "image_id": image_id,
                 "prediction": labels[predicted_class],
                 "confidence": round(confidence, 6),
-                "image_data": img_base64
+                "image_data": img_base64,
             }
             client.publish(TOPIC_INFERENCE, json.dumps(payload))
-            print(f"[MQTT] Sent detection: {payload['prediction']} ({payload['confidence']})")
+            print(
+                f"[MQTT] Sent detection: {payload['prediction']} ({payload['confidence']})"
+            )
+
 
 # ========== Thread 1: Camera & Capture ==========
 def detection_thread():
@@ -181,6 +202,7 @@ def detection_thread():
             capture_requested = False
 
         time.sleep(0.5)
+
 
 # ========== Thread 2: Sensor reading & Pump control ==========
 def sensor_thread():
@@ -205,15 +227,12 @@ def sensor_thread():
             print("Soil wet enough. Turning pump OFF")
             pump.pump_relay.value = False
 
-        payload = {
-            "temp": temp,
-            "humidity": hum,
-            "moisture": soil_value
-        }
+        payload = {"temp": temp, "humidity": hum, "moisture": soil_value}
         client.publish(TOPIC_SENSOR, json.dumps(payload))
         print(f"[MQTT] Sent sensor data: {payload}")
         print("-" * 30)
         time.sleep(5)
+
 
 # ========== MAIN ==========
 try:
