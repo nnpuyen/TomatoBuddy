@@ -57,20 +57,23 @@ def on_message(client, userdata, msg):
 
 def handle_sensor_data(data: dict):
     try:
+        # soil = int(data.get("soil", 0))
+        # voltage = float(data.get("voltage", 0.0))
         temp = float(data.get("temp", 0.0))
         humidity = float(data.get("humidity", 0.0))
         moisture = float(data.get("moisture", 0.0))
-        light = float(data.get("light", 0.0))
-        water_level = float(data.get("water_level", 0.0))
+        # light = float(data.get("light", 0.0))
+        # water_level = float(data.get("water_level", 0.0))
 
-        print(f"Temp: {temp}°C | Humidity: {humidity}% | Moisture: {moisture}% | Light: {light} | Water: {water_level}ml")
+        print(f"Temp: {temp}°C | Humidity: {humidity}% | Moisture: {moisture}%")
+        # print(f"Temp: {temp}°C | Humidity: {humidity}% | Moisture: {moisture}% | Light: {light} | Water: {water_level}ml")
 
         save_sensor_reading(
             temp=temp,
             humidity=humidity,
             moisture=moisture,
-            light=light,
-            water_level=water_level,
+            # light=light,
+            # water_level=water_level,
             timestamp=datetime.now(),
         )
     except Exception as e:
@@ -84,7 +87,7 @@ def handle_inference_data(data: dict):
         confidence = float(data.get("confidence", 0.0))
         image_data = data.get("image_data", "")  # base64
 
-        print(f"Inference result: '{prediction}' ({confidence:.2f}) for image {image_id}")
+        print(f"Inference result: '{prediction}' ({confidence:.6f}) for image {image_id}")
 
         image_url = None
         if image_data:
