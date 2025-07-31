@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 from datetime import datetime
 import base64
+import time
 
 from app.database.mongodb import (
     save_sensor_reading,
@@ -11,7 +12,7 @@ from app.database.mongodb import (
 from app.database.cloudinary import upload_image
 
 # MQTT config
-BROKER = "broker.hivemq.com"
+BROKER = "10.211.222.46"
 PORT = 1883
 
 # Topics
@@ -19,6 +20,7 @@ SENSOR_TOPIC = "pizero2w/sensorreading"
 INFERENCE_TOPIC = "pizero2w/inference"
 ACK_TOPIC_PREFIX = "pizero2w/ack/"
 COMMAND_TOPIC = "pizero2w/commands"
+SETTINGS_TOPIC = "pizero2w/settings"
 
 client = mqtt.Client()
 
@@ -65,12 +67,11 @@ def handle_sensor_data(data: dict):
         print(f"Temp: {temp}°C | Humidity: {humidity}% | Moisture: {moisture}% | Light: {light} | Water: {water_level}ml")
 
         save_sensor_reading(
-            temp=temp,
+            temperature=temp,
             humidity=humidity,
             moisture=moisture,
             light=light,
             water_level=water_level,
-            timestamp=datetime.now(),
         )
     except Exception as e:
         print(f"Error handling sensor data: {str(e)}")
@@ -106,26 +107,33 @@ def handle_command_ack(command_type: str, data: dict):
         success = data.get("success", False)
         status = "success" if success else "failed"
         print(f"🛠️ Command '{command_type}' execution status: {status}")
-        save_command_execution(command_type, success, datetime.now())
+        save_command_execution(command_type, success)
     except Exception as e:
         print(f"Error handling command ack: {str(e)}")
 
 
 # -------------------- MQTT UTILITIES --------------------
 
-def start_mqtt() -> bool:
-    """Connect and start MQTT loop in background"""
-    try:
-        print("Connecting to MQTT broker...")
-        client.on_connect = on_connect
-        client.on_message = on_message
-        client.connect(BROKER, PORT, keepalive=60)
-        client.loop_start()
-        print("MQTT client started")
-        return True
-    except Exception as e:
-        print(f"MQTT connection failed: {str(e)}")
-        return False
+def start_mqtt(max_retries: int = 9999, retry_delay: int = 5) -> bool:
+    """Connect and start MQTT loop in background, with retry if fails"""
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"[MQTT] Attempt {attempt}: Connecting to broker {BROKER}:{PORT} ...")
+            client.connect(BROKER, PORT, keepalive=60)
+            client.loop_start()
+            print("[MQTT] MQTT client started")
+            return True
+        except Exception as e:
+            print(f"[MQTT] Connection failed: {e}")
+            if attempt < max_retries:
+                print(f"[MQTT] Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print("[MQTT] Max retries reached. MQTT connection failed")
+                return False
 
 
 def publish_message(topic: str, payload: dict) -> bool:
@@ -159,3 +167,20 @@ def send_capture_command() -> bool:
 
 def send_chirp_command(duration: int = 3) -> bool:
     return send_command("chirp", {"duration": duration})
+
+
+#- -------------------- SETTINGS --------------------
+def send_settings_update(settings):
+    """Send settings update to edge AI via MQTT"""
+    payload = {
+        "settings": {
+            "image_capture_interval": settings["image_capture_interval"],
+            "temp_humidity_interval": settings["temp_humidity_interval"],
+            "light_intensity_interval": settings["light_intensity_interval"],
+            "soil_moisture_interval": settings["soil_moisture_interval"],
+            "water_level_interval": settings["water_level_interval"]
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+    return publish_message(SETTINGS_TOPIC, payload)
+

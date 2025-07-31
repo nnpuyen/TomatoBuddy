@@ -5,7 +5,7 @@ import logging
 import os
 
 from app.mqtt_client import start_mqtt
-from app.routers import commands, data
+from app.routers import commands, data, settings
 from app.database import init_database
 
 # Setup logger
@@ -50,7 +50,7 @@ app.add_middleware(
 # Register routers
 app.include_router(commands.router)
 app.include_router(data.router)
-
+app.include_router(settings.router)
 
 @app.get("/")
 async def root():

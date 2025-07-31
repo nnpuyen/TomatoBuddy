@@ -217,3 +217,37 @@ def get_watering_history(
     except Exception as e:
         logger.error(f"Failed to retrieve watering history: {e}")
         return []
+
+
+def get_settings():
+    """Get settings, create defaults if none exist"""
+    settings = db.settings.find_one()
+    if not settings:
+        default_settings = {
+            "image_capture_interval": 720,
+            "temp_humidity_interval": 360,
+            "light_intensity_interval": 360,
+            "soil_moisture_interval": 360,
+            "water_level_interval": 360,
+            "created_at": datetime.now(),
+            "updated_at": datetime.now()
+        }
+        db.settings.insert_one(default_settings)
+        return default_settings
+    return settings
+
+def update_settings(settings_data):
+    """Update settings in database"""
+    try:
+        settings_data["updated_at"] = datetime.now()
+        db.settings.update_one(
+            {},  # Update the single settings document
+            {"$set": settings_data},
+            upsert=True
+        )
+        return True, "Settings updated successfully"
+    except Exception as e:
+        return False, f"Error: {e}"
+    
+
+

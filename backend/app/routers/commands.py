@@ -11,7 +11,7 @@ class WaterCommand(BaseModel):
 
 
 class ChirpCommand(BaseModel):
-    duration: int = 3  # Default 3 seconds
+    duration: int = 60  # Default 60 seconds
 
 
 @router.post("/water")
