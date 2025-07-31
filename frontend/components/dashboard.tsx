@@ -33,6 +33,23 @@ export default function Dashboard() {
     }
   }
 
+  const handleCaptureNow = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/api/commands/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: "capture" }),
+      });
+      if (response.ok) {
+        console.log("Capture command sent successfully");
+      } else {
+        console.error("Failed to send capture command");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+    }
+  }
+
   useEffect(() => {
     fetchSensorData()
     const interval = setInterval(fetchSensorData, 10000)
@@ -171,7 +188,7 @@ export default function Dashboard() {
                 <Droplets className="w-4 h-4 mr-1" />
                 Remote watering
               </Button>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" onClick={handleCaptureNow}>
                 Capture now
               </Button>
               <Button size="sm" className="bg-green-500 hover:bg-green-600">
