@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
 
-from app.mqtt_client import start_mqtt
+# from app.mqtt_client import start_mqtt   # Tạm thời comment MQTT
 from app.routers import commands, data, settings
 from app.database import init_database
 
@@ -21,12 +21,12 @@ async def lifespan(app: FastAPI):
     logger.info("FastAPI is starting...")
     init_database()
 
-    try:
-        start_mqtt()
-        logger.info("MQTT connection established.")
-    except Exception as e:
-        logger.warning(f"MQTT connection failed: {e}")
-        logger.info("Running without MQTT functionality")
+    # try:
+    #     start_mqtt()
+    #     logger.info("MQTT connection established.")
+    # except Exception as e:
+    #     logger.warning(f"MQTT connection failed: {e}")
+    #     logger.info("Running without MQTT functionality")
 
     yield
 
