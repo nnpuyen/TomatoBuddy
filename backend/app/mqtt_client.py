@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 import base64
 import time
+import time
 
 from app.database.mongodb import (
     save_sensor_reading,
@@ -12,7 +13,7 @@ from app.database.mongodb import (
 from app.database.cloudinary import upload_image
 
 # MQTT config
-BROKER = "test.mosquitto.org"
+BROKER = "10.211.222.46"
 PORT = 1883
 
 # Topics
@@ -20,6 +21,7 @@ SENSOR_TOPIC = "pizero2w/sensorreading"
 INFERENCE_TOPIC = "pizero2w/inference"
 ACK_TOPIC_PREFIX = "pizero2w/ack/"
 COMMAND_TOPIC = "pizero2w/commands"
+SETTINGS_TOPIC = "pizero2w/settings"
 
 client = mqtt.Client()
 
@@ -62,19 +64,18 @@ def handle_sensor_data(data: dict):
         temp = float(data.get("temp", 0.0))
         humidity = float(data.get("humidity", 0.0))
         moisture = float(data.get("moisture", 0.0))
-        # light = float(data.get("light", 0.0))
+        light = float(data.get("light", 0.0))
         # water_level = float(data.get("water_level", 0.0))
 
-        print(f"Temp: {temp}°C | Humidity: {humidity}% | Moisture: {moisture}%")
+        print(f"Temp: {temp}°C | Humidity: {humidity}% | Moisture: {moisture}% | Light: {light}")
         # print(f"Temp: {temp}°C | Humidity: {humidity}% | Moisture: {moisture}% | Light: {light} | Water: {water_level}ml")
 
         save_sensor_reading(
-            temp=temp,
+            temperature=temp,
             humidity=humidity,
             moisture=moisture,
-            # light=light,
+            light=light,
             # water_level=water_level,
-            timestamp=datetime.now(),
         )
     except Exception as e:
         print(f"Error handling sensor data: {str(e)}")
@@ -110,7 +111,7 @@ def handle_command_ack(command_type: str, data: dict):
         success = data.get("success", False)
         status = "success" if success else "failed"
         print(f"🛠️ Command '{command_type}' execution status: {status}")
-        save_command_execution(command_type, success, datetime.now())
+        save_command_execution(command_type, success)
     except Exception as e:
         print(f"Error handling command ack: {str(e)}")
 
@@ -170,3 +171,19 @@ def send_capture_command() -> bool:
 
 def send_chirp_command(duration: int = 3) -> bool:
     return send_command("chirp", {"duration": duration})
+
+
+#- -------------------- SETTINGS --------------------
+def send_settings_update(settings):
+    """Send settings update to edge AI via MQTT"""
+    payload = {
+        "settings": {
+            # "image_capture_interval": settings["image_capture_interval"],
+            "temp_humidity_interval": settings["temp_humidity_interval"],
+            "light_intensity_interval": settings["light_intensity_interval"],
+            "soil_moisture_interval": settings["soil_moisture_interval"],
+            # "water_level_interval": settings["water_level_interval"]
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+    return publish_message(SETTINGS_TOPIC, payload)
