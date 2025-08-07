@@ -181,6 +181,10 @@ export default function ImagesDetection() {
     { value: "Early Blight", label: "Early Blight" },
     { value: "Leaf Miner", label: "Leaf Miner" },
     { value: "Bacterial Spot", label: "Bacterial Spot" },
+    { value: "Leaf Mold", label: "Leaf Mold" },
+    { value: "Spider Mites", label: "Spider Mites" },
+    { value: "Yellow Leaf Curl Virus", label: "Yellow Leaf Curl Virus" },
+    { value: "Septoria", label: "Septoria" },
   ];
 
   return (

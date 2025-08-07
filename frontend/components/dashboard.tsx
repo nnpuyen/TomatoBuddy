@@ -1,65 +1,50 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { Droplets, Camera, CheckCircle, Edit } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
-import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Droplets, Camera, CheckCircle, Edit, Gauge, Thermometer, Sun } from 'lucide-react' // Added Gauge icon
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { useState, useEffect } from "react"
 
 interface SensorData {
-  _id: string;
-  temperature: number;
-  humidity: number;
-  moisture: number;
-  light: number;
-  water_level: number;
-  timestamp: string;
+  _id: string
+  temperature: number
+  humidity: number
+  moisture: number
+  light: number
+  water_level: number
+  timestamp: string
 }
 
 export default function Dashboard() {
-  const [sensorData, setSensorData] = useState<SensorData | null>(null);
-  const [forecast, setForecast] = useState<
-    { time: string; temp: string; rain: string }[]
-  >([]);
+  const [sensorData, setSensorData] = useState<SensorData | null>(null)
+  const [forecast, setForecast] = useState<{ time: string; temp: string; rain: string }[]>([])
 
   const fetchSensorData = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/data/sensors/latest"
-      );
+      const response = await fetch("http://localhost:8000/api/data/sensors/latest")
       if (response.ok) {
-        const data: SensorData = await response.json();
-        setSensorData(data);
+        const data: SensorData = await response.json()
+        setSensorData(data)
       }
     } catch (err) {
-      console.error("Failed to fetch sensor data:", err);
+      console.error("Failed to fetch sensor data:", err)
     }
-  };
+  }
 
   const fetchWeatherForecast = async () => {
     try {
-      const lat = 10.762622; // TPHCM
-      const lon = 106.660172;
-      const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+      const lat = 10.762622 // TPHCM
+      const lon = 106.660172
+      const apiKey = "4bc1f51cc708a0e3380dfb50a2fc88a8"
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`
-      );
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`,
+      )
       if (response.ok) {
-        const data = await response.json();
-        const today = new Date().toISOString().split("T")[0];
+        const data = await response.json()
+        const today = new Date().toISOString().split("T")[0]
         const todayForecast = data.list
           .filter((item: any) => item.dt_txt.startsWith(today))
           .slice(0, 8) // Limit to 8 entries
@@ -67,41 +52,39 @@ export default function Dashboard() {
             time: item.dt_txt.split(" ")[1].slice(0, 5),
             temp: `${Math.round(item.main.temp)}°C`,
             rain: `${Math.round((item.pop || 0) * 100)}%`,
-          }));
-        setForecast(todayForecast);
+          }))
+        setForecast(todayForecast)
       } else {
-        console.error("Weather API error:", response.status);
+        console.error("Weather API error:", response.status)
         // Set fallback data
         setForecast([
           { time: "Now", temp: "28°C", rain: "20%" },
           { time: "+3h", temp: "30°C", rain: "15%" },
           { time: "+6h", temp: "32°C", rain: "10%" },
           { time: "+9h", temp: "29°C", rain: "25%" },
-        ]);
+        ])
       }
     } catch (err) {
-      console.error("Failed to fetch weather forecast:", err);
+      console.error("Failed to fetch weather forecast:", err)
       // Set fallback data on error
       setForecast([
         { time: "Now", temp: "28°C", rain: "20%" },
         { time: "+3h", temp: "30°C", rain: "15%" },
         { time: "+6h", temp: "32°C", rain: "10%" },
         { time: "+9h", temp: "29°C", rain: "25%" },
-      ]);
+      ])
     }
-  };
+  }
 
   useEffect(() => {
-    fetchSensorData();
-    fetchWeatherForecast();
-    const interval = setInterval(fetchSensorData, 10000);
-    return () => clearInterval(interval);
-  }, []);
+    fetchSensorData()
+    fetchWeatherForecast()
+    const interval = setInterval(fetchSensorData, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
-  const waterLevelPercentage = sensorData
-    ? Math.min((sensorData.water_level / 1400) * 100, 100)
-    : 50;
-  const moisturePercentage = sensorData ? sensorData.moisture : 50;
+  const waterLevelPercentage = sensorData ? Math.min((sensorData.water_level / 1400) * 100, 100) : 50
+  const moisturePercentage = sensorData ? sensorData.moisture : 50
 
   // Sample data for Temperature and Humidity chart
   const tempHumidityData = [
@@ -117,7 +100,7 @@ export default function Dashboard() {
     { time: "18:00", temperature: 25, humidity: 50 },
     { time: "20:00", temperature: 22, humidity: 55 },
     { time: "22:00", temperature: 20, humidity: 60 },
-  ];
+  ]
 
   // Sample data for Moisture and Light chart
   const moistureLightData = [
@@ -133,27 +116,24 @@ export default function Dashboard() {
     { time: "18:00", moisture: 40, light: 50 },
     { time: "20:00", moisture: 38, light: 25 },
     { time: "22:00", moisture: 36, light: 5 },
-  ];
+  ]
 
   const handleCaptureNow = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/commands/capture",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ command: "capture" }),
-        }
-      );
+      const response = await fetch("http://localhost:8000/api/commands/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: "capture" }),
+      })
       if (response.ok) {
-        console.log("Capture command sent successfully");
+        console.log("Capture command sent successfully")
       } else {
-        console.error("Failed to send capture command");
+        console.error("Failed to send capture command")
       }
     } catch (err) {
-      console.error("Error:", err);
+      console.error("Error:", err)
     }
-  };
+  }
 
   const handleWateringNow = async () => {
     try {
@@ -161,16 +141,16 @@ export default function Dashboard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ command: "water", duration: 5 }),
-      });
+      })
       if (response.ok) {
-        console.log("Watering command sent successfully");
+        console.log("Watering command sent successfully")
       } else {
-        console.error("Failed to send watering command");
+        console.error("Failed to send watering command")
       }
     } catch (err) {
-      console.error("Error:", err);
+      console.error("Error:", err)
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -181,18 +161,8 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="text-center">
               <div className="relative w-24 h-24 mx-auto mb-4">
-                <svg
-                  className="w-24 h-24 transform -rotate-90"
-                  viewBox="0 0 100 100"
-                >
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#e5e7eb"
-                    strokeWidth="8"
-                    fill="none"
-                  />
+                <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" stroke="#e5e7eb" strokeWidth="8" fill="none" />
                   <circle
                     cx="50"
                     cy="50"
@@ -200,16 +170,12 @@ export default function Dashboard() {
                     stroke="#3b82f6"
                     strokeWidth="8"
                     fill="none"
-                    strokeDasharray={`${waterLevelPercentage * 2.51} ${
-                      100 * 2.51
-                    }`}
+                    strokeDasharray={`${waterLevelPercentage * 2.51} ${100 * 2.51}`}
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-xs text-gray-500">
-                    {sensorData ? `${sensorData.water_level}ml` : "700ml"}
-                  </span>
+                  <span className="text-xs text-gray-500">{sensorData ? `${sensorData.water_level}ml` : "700ml"}</span>
                   <span className="text-xs text-gray-500">0ml</span>
                 </div>
               </div>
@@ -224,18 +190,8 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="text-center">
               <div className="relative w-24 h-24 mx-auto mb-4">
-                <svg
-                  className="w-24 h-24 transform -rotate-90"
-                  viewBox="0 0 100 100"
-                >
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#e5e7eb"
-                    strokeWidth="8"
-                    fill="none"
-                  />
+                <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" stroke="#e5e7eb" strokeWidth="8" fill="none" />
                   <circle
                     cx="50"
                     cy="50"
@@ -243,9 +199,7 @@ export default function Dashboard() {
                     stroke="#22c55e"
                     strokeWidth="8"
                     fill="none"
-                    strokeDasharray={`${moisturePercentage * 2.51} ${
-                      100 * 2.51
-                    }`}
+                    strokeDasharray={`${moisturePercentage * 2.51} ${100 * 2.51}`}
                     strokeLinecap="round"
                   />
                 </svg>
@@ -265,80 +219,29 @@ export default function Dashboard() {
         </Card>
 
         {/* Controls */}
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-blue-500">
-                  Watering mode
-                </span>
-                <span className="text-sm font-medium text-green-500">
-                  Minimum moisture
-                </span>
-              </div>
-              <div className="flex items-center justify-between mb-4">
-                <Droplets className="w-6 h-6 text-blue-500" />
-                <span className="text-2xl font-bold text-blue-500">60%</span>
-              </div>
-              <div className="flex space-x-2 mb-4">
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-100 text-blue-700"
-                >
-                  Auto
-                </Badge>
-                <Badge variant="outline">Schedule</Badge>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                <div
-                  className="bg-green-500 h-2 rounded-full"
-                  style={{ width: "60%" }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>0%</span>
-                <span>100%</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                size="sm"
-                className="bg-blue-500 hover:bg-blue-600"
-                onClick={handleWateringNow}
-              >
-                <Droplets className="w-4 h-4 mr-1" />
-                Remote watering
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleCaptureNow}>
-                <Camera className="w-4 h-4 mr-1" />
-                Capture now
-              </Button>
-              <Button
-                size="sm"
-                className="bg-green-500 hover:bg-green-600"
-                onClick={handleWateringNow}
-              >
-                <Droplets className="w-4 h-4 mr-1" />
-                Watering now
-              </Button>
-              <Button
-                size="sm"
-                className="bg-purple-500 hover:bg-purple-600"
-                onClick={handleCaptureNow}
-              >
-                <Camera className="w-4 h-4 mr-1" />
-                Capture image
-              </Button>
-            </div>
-          </CardContent>
+        <Card className="col-span-1 flex flex-col justify-center items-center p-6">
+          <div className="grid grid-cols-1 gap-4 w-full">
+            <Button
+              className="h-24 bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg flex flex-col items-center justify-center rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
+              onClick={handleWateringNow}
+            >
+              <Droplets className="w-8 h-8 mb-2" />
+              <span>Water Now</span>
+            </Button>
+            <Button
+              className="h-24 bg-green-500 hover:bg-green-600 text-white font-bold text-lg flex flex-col items-center justify-center rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
+              onClick={handleCaptureNow}
+            >
+              <Camera className="w-8 h-8 mb-2" />
+              <span>Capture Image</span>
+            </Button>
+          </div>
         </Card>
 
         {/* Watering Schedule */}
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-blue-500 mb-4">
-              Watering schedule
-            </h3>
+            <h3 className="text-lg font-semibold text-blue-500 mb-4">Watering schedule</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -354,11 +257,7 @@ export default function Dashboard() {
                 </div>
                 <Droplets className="w-6 h-6 text-blue-500" />
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full bg-transparent"
-              >
+              <Button size="sm" variant="outline" className="w-full bg-transparent">
                 <Edit className="w-4 h-4 mr-1" />
                 Edit
               </Button>
@@ -371,9 +270,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-6">
         {/* Temperature and Humidity Chart */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-green-500">
-              Temperature and Humidity over the past
+          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
+            <CardTitle className="text-green-700 flex items-center space-x-2">
+              <Thermometer className="w-5 h-5" />
+              <span>Temperature and Humidity over the past</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -381,67 +281,86 @@ export default function Dashboard() {
               config={{
                 temperature: {
                   label: "Temperature",
-                  color: "hsl(142, 76%, 36%)",
+                  color: "hsl(142, 76%, 36%)", // Green
                 },
                 humidity: {
                   label: "Humidity",
-                  color: "hsl(217, 91%, 60%)",
+                  color: "hsl(217, 91%, 60%)", // Blue
                 },
               }}
-              className="h-[300px]"
+              className="h-[300px] w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={tempHumidityData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  margin={{
+                    left: -10,
+                    right: 10,
+                  }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis
                     dataKey="time"
-                    axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: "#666" }}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 5)}
                   />
                   <YAxis
-                    axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: "#666" }}
+                    axisLine={false}
+                    tickMargin={8}
+                    domain={[0, 100]} // Set domain for Y-axis
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                   <Line
-                    type="monotone"
                     dataKey="temperature"
+                    type="monotone"
                     stroke="var(--color-temperature)"
                     strokeWidth={2}
                     dot={{
                       fill: "var(--color-temperature)",
+                      stroke: "var(--color-temperature)",
                       strokeWidth: 2,
                       r: 4,
                     }}
-                    activeDot={{ r: 6 }}
+                    activeDot={{
+                      r: 6,
+                      fill: "var(--color-temperature)",
+                      stroke: "var(--color-temperature)",
+                    }}
                   />
                   <Line
-                    type="monotone"
                     dataKey="humidity"
+                    type="monotone"
                     stroke="var(--color-humidity)"
                     strokeWidth={2}
                     dot={{
                       fill: "var(--color-humidity)",
+                      stroke: "var(--color-humidity)",
                       strokeWidth: 2,
                       r: 4,
                     }}
-                    activeDot={{ r: 6 }}
+                    activeDot={{
+                      r: 6,
+                      fill: "var(--color-humidity)",
+                      stroke: "var(--color-humidity)",
+                    }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
             <div className="flex justify-center space-x-6 mt-4">
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded"></div>
+                <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                  <Thermometer className="w-2.5 h-2.5 text-white" />
+                </div>
                 <span className="text-sm text-gray-600">Temperature</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                  <Droplets className="w-2.5 h-2.5 text-white" />
+                </div>
                 <span className="text-sm text-gray-600">Humidity</span>
               </div>
             </div>
@@ -450,9 +369,10 @@ export default function Dashboard() {
 
         {/* Moisture and Light Chart */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-blue-500">
-              Moisture and Light over the past
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+            <CardTitle className="text-blue-700 flex items-center space-x-2">
+              <Droplets className="w-5 h-5" />
+              <span>Moisture and Light over the past</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -460,64 +380,87 @@ export default function Dashboard() {
               config={{
                 moisture: {
                   label: "Moisture",
-                  color: "hsl(217, 91%, 60%)",
+                  color: "hsl(217, 91%, 60%)", // Blue
                 },
                 light: {
                   label: "Light Intensity",
-                  color: "hsl(142, 76%, 36%)",
+                  color: "hsl(142, 76%, 36%)", // Green
                 },
               }}
-              className="h-[300px]"
+              className="h-[300px] w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={moistureLightData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  margin={{
+                    left: -10,
+                    right: 10,
+                  }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis
                     dataKey="time"
-                    axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: "#666" }}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 5)}
                   />
                   <YAxis
-                    axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 12, fill: "#666" }}
+                    axisLine={false}
+                    tickMargin={8}
+                    domain={[0, 100]} // Set domain for Y-axis
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                   <Line
-                    type="monotone"
                     dataKey="moisture"
+                    type="monotone"
                     stroke="var(--color-moisture)"
                     strokeWidth={2}
                     dot={{
                       fill: "var(--color-moisture)",
+                      stroke: "var(--color-moisture)",
                       strokeWidth: 2,
                       r: 4,
                     }}
-                    activeDot={{ r: 6 }}
+                    activeDot={{
+                      r: 6,
+                      fill: "var(--color-moisture)",
+                      stroke: "var(--color-moisture)",
+                    }}
                   />
                   <Line
-                    type="monotone"
                     dataKey="light"
+                    type="monotone"
                     stroke="var(--color-light)"
                     strokeWidth={2}
-                    dot={{ fill: "var(--color-light)", strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6 }}
+                    dot={{
+                      fill: "var(--color-light)",
+                      stroke: "var(--color-light)",
+                      strokeWidth: 2,
+                      r: 4,
+                    }}
+                    activeDot={{
+                      r: 6,
+                      fill: "var(--color-light)",
+                      stroke: "var(--color-light)",
+                    }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
             <div className="flex justify-center space-x-6 mt-4">
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                <span className="text-sm text-gray-600">Moisture</span>
+                <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                  <Thermometer className="w-2.5 h-2.5 text-white" />
+                </div>
+                <span className="text-sm text-gray-600">Temperature</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded"></div>
-                <span className="text-sm text-gray-600">Light Intensity</span>
+                <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                  <Droplets className="w-2.5 h-2.5 text-white" />
+                </div>
+                <span className="text-sm text-gray-600">Humidity</span>
               </div>
             </div>
           </CardContent>
@@ -534,15 +477,11 @@ export default function Dashboard() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold">Weather Forecast</h3>
-                <p className="text-blue-100 text-sm">
-                  Ho Chi Minh City • Today
-                </p>
+                <p className="text-blue-100 text-sm">Ho Chi Minh City • Today</p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold">
-                {forecast.length > 0 ? forecast[0].temp : "28°C"}
-              </div>
+              <div className="text-2xl font-bold">{forecast.length > 0 ? forecast[0].temp : "28°C"}</div>
               <div className="text-blue-100 text-sm">Current</div>
             </div>
           </CardTitle>
@@ -552,31 +491,24 @@ export default function Dashboard() {
             {forecast.length > 0 ? (
               <div className="grid grid-cols-4 gap-4">
                 {forecast.slice(0, 4).map((item, index) => {
-                  const precipitationValue = Number.parseInt(
-                    item.rain.replace("%", "")
-                  );
-                  const tempValue = Number.parseInt(
-                    item.temp.replace("°C", "")
-                  );
-                  const barHeight = Math.max(
-                    20,
-                    (precipitationValue / 100) * 60
-                  );
+                  const precipitationValue = Number.parseInt(item.rain.replace("%", ""))
+                  const tempValue = Number.parseInt(item.temp.replace("°C", ""))
+                  const barHeight = Math.max(20, (precipitationValue / 100) * 60)
 
                   // Determine weather icon based on precipitation
                   const getWeatherIcon = (rain: number, temp: number) => {
-                    if (rain > 70) return "🌧️";
-                    if (rain > 40) return "⛅";
-                    if (rain > 20) return "🌤️";
-                    if (temp > 32) return "☀️";
-                    return "🌞";
-                  };
+                    if (rain > 70) return "🌧️"
+                    if (rain > 40) return "⛅"
+                    if (rain > 20) return "🌤️"
+                    if (temp > 32) return "☀️"
+                    return "🌞"
+                  }
 
                   const getTimeLabel = (time: string, index: number) => {
-                    if (index === 0) return "Now";
-                    if (time.includes(":")) return time;
-                    return `+${index * 3}h`;
-                  };
+                    if (index === 0) return "Now"
+                    if (time.includes(":")) return time
+                    return `+${index * 3}h`
+                  }
 
                   return (
                     <div
@@ -584,9 +516,7 @@ export default function Dashboard() {
                       className="text-center group hover:bg-white/50 rounded-xl p-4 transition-all duration-300 hover:shadow-lg"
                     >
                       {/* Time */}
-                      <div className="text-sm font-semibold text-gray-600 mb-2">
-                        {getTimeLabel(item.time, index)}
-                      </div>
+                      <div className="text-sm font-semibold text-gray-600 mb-2">{getTimeLabel(item.time, index)}</div>
 
                       {/* Weather Icon */}
                       <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">
@@ -594,9 +524,7 @@ export default function Dashboard() {
                       </div>
 
                       {/* Temperature */}
-                      <div className="text-xl font-bold text-gray-800 mb-2">
-                        {item.temp}
-                      </div>
+                      <div className="text-xl font-bold text-gray-800 mb-2">{item.temp}</div>
 
                       {/* Precipitation Bar */}
                       <div className="flex flex-col items-center mb-3">
@@ -608,9 +536,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center space-x-1">
                           <Droplets className="w-3 h-3 text-blue-500" />
-                          <span className="text-xs font-medium text-blue-600">
-                            {item.rain}
-                          </span>
+                          <span className="text-xs font-medium text-blue-600">{item.rain}</span>
                         </div>
                       </div>
 
@@ -626,7 +552,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             ) : (
@@ -649,14 +575,7 @@ export default function Dashboard() {
                 <span className="text-xs text-gray-600">Precipitation</span>
                 <span className="text-sm font-semibold text-gray-800">
                   {forecast.length > 0
-                    ? `${Math.round(
-                        forecast
-                          .slice(0, 4)
-                          .reduce(
-                            (acc, item) => acc + Number.parseInt(item.rain),
-                            0
-                          ) / 4
-                      )}% avg`
+                    ? `${Math.round(forecast.slice(0, 4).reduce((acc, item) => acc + Number.parseInt(item.rain), 0) / 4)}% avg`
                     : "15% avg"}
                 </span>
               </div>
@@ -667,14 +586,7 @@ export default function Dashboard() {
                 <span className="text-xs text-gray-600">Temperature</span>
                 <span className="text-sm font-semibold text-gray-800">
                   {forecast.length > 0
-                    ? `${Math.round(
-                        forecast
-                          .slice(0, 4)
-                          .reduce(
-                            (acc, item) => acc + Number.parseInt(item.temp),
-                            0
-                          ) / 4
-                      )}°C avg`
+                    ? `${Math.round(forecast.slice(0, 4).reduce((acc, item) => acc + Number.parseInt(item.temp), 0) / 4)}°C avg`
                     : "29°C avg"}
                 </span>
               </div>
@@ -684,8 +596,7 @@ export default function Dashboard() {
                 </div>
                 <span className="text-xs text-gray-600">Plant Care</span>
                 <span className="text-sm font-semibold text-green-600">
-                  {forecast.length > 0 &&
-                  Number.parseInt(forecast[0].rain.replace("%", "")) > 50
+                  {forecast.length > 0 && Number.parseInt(forecast[0].rain.replace("%", "")) > 50
                     ? "Reduce watering"
                     : "Normal care"}
                 </span>
@@ -701,34 +612,22 @@ export default function Dashboard() {
                   <span className="text-white text-xs">💡</span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-800 mb-1">
-                    Plant Care Recommendation
-                  </h4>
+                  <h4 className="text-sm font-semibold text-gray-800 mb-1">Plant Care Recommendation</h4>
                   <p className="text-xs text-gray-600">
                     {(() => {
                       const avgRain =
-                        forecast
-                          .slice(0, 4)
-                          .reduce(
-                            (acc, item) => acc + Number.parseInt(item.rain),
-                            0
-                          ) / 4;
+                        forecast.slice(0, 4).reduce((acc, item) => acc + Number.parseInt(item.rain), 0) / 4
                       const avgTemp =
-                        forecast
-                          .slice(0, 4)
-                          .reduce(
-                            (acc, item) => acc + Number.parseInt(item.temp),
-                            0
-                          ) / 4;
+                        forecast.slice(0, 4).reduce((acc, item) => acc + Number.parseInt(item.temp), 0) / 4
 
                       if (avgRain > 60) {
-                        return "High precipitation expected. Consider reducing watering schedule and ensure proper drainage.";
+                        return "High precipitation expected. Consider reducing watering schedule and ensure proper drainage."
                       } else if (avgTemp > 32) {
-                        return "High temperatures ahead. Increase watering frequency and provide shade during peak hours.";
+                        return "High temperatures ahead. Increase watering frequency and provide shade during peak hours."
                       } else if (avgRain < 20 && avgTemp > 28) {
-                        return "Dry and warm conditions. Monitor soil moisture closely and water as needed.";
+                        return "Dry and warm conditions. Monitor soil moisture closely and water as needed."
                       } else {
-                        return "Weather conditions are favorable. Maintain regular watering schedule.";
+                        return "Weather conditions are favorable. Maintain regular watering schedule."
                       }
                     })()}
                   </p>
@@ -739,5 +638,5 @@ export default function Dashboard() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
